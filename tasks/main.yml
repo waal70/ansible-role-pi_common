@@ -158,6 +158,7 @@
   register: eeprom_poke
   when: has_bootloader is defined
   changed_when: false
+  ignore_errors: true # When update available, this task will have non-zero return code
 
 - name: Update bootloader when necessary
   ansible.builtin.command: rpi-eeprom-update -a
