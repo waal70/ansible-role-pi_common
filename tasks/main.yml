@@ -133,20 +133,28 @@
   changed_when: true
 
 # P8 Remote GPIO
-- name: Get rGPIO status
-  ansible.builtin.command: raspi-config nonint get_rgpio
-  register: rgpio_status
-  changed_when: false
+- name: Block for remote GPIO, for which support was removed as per Debian 13
+  when: "ansible_distribution_major_version | int <= 12"
+  block:
+    - name: Distribution version
+      ansible.builtin.debug:
+        msg: "{{ ansible_distribution_major_version }}"
 
-- name: Print rGPIO status
-  ansible.builtin.debug:
-    msg: "rGPIO status is: {{ rgpio_status.stdout }}"
+    - name: Get rGPIO status
+      ansible.builtin.command: raspi-config nonint get_rgpio
+      register: rgpio_status
+      changed_when: false
 
-- name: Set Remote GPIO
-  ansible.builtin.command: raspi-config nonint do_rgpio {{ disable_gpio }}
-  when: rgpio_status.stdout != disable_gpio
-  notify: Restart Raspberry
-  changed_when: true
+    - name: Print rGPIO status
+      ansible.builtin.debug:
+        msg: "rGPIO status is: {{ rgpio_status.stdout }}"
+
+    - name: Set Remote GPIO
+      ansible.builtin.command: raspi-config nonint do_rgpio {{ disable_gpio }}
+      when: rgpio_status.stdout != disable_gpio
+      notify: Restart Raspberry
+      changed_when: true
+# END BLOCK P8
 
 - name: Set has_bootloader depending on cpu-version
   ansible.builtin.set_fact:
