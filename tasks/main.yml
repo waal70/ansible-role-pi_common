@@ -1,5 +1,8 @@
 ---
 # tasks file for pi-common
+- name: Check is this a raspberry, if not, end role
+  ansible.builtin.meta: end_role
+  when: ansible_local.cpu_info.systemtype != "Raspberry"
 ## Start by expanding the filesystem (when possible)
 - name: Check whether FS is expandable
   ansible.builtin.command: raspi-config nonint get_can_expand
