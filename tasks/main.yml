@@ -159,6 +159,14 @@
       changed_when: true
 # END BLOCK P8
 
+- name: Ensure rpi-connect-lite is not installed
+  ansible.builtin.apt:
+    name: rpi-connect-lite
+    state: absent
+    purge: true
+    autoremove: true
+    update_cache: false
+
 - name: Set has_bootloader depending on cpu-version
   ansible.builtin.set_fact:
     has_bootloader: true
