@@ -20,3 +20,46 @@
   with_items:
     - { regexp: "^#*?dtoverlay.*=.*disable-bt", line: "dtoverlay=disable-bt", after: "^[all]" }
     - { regexp: "^#*?dtoverlay.*=.*disable-wifi", line: "dtoverlay=disable-wifi", after: "^[all]" }
+
+- name: Set fact for root mount
+  ansible.builtin.set_fact:
+    root_device: "{{ ansible_mounts | json_query(dev_filter) }}"
+  vars:
+    dev_filter: "[?mount=='/'].device "
+
+- name: Get boot config status
+  ansible.builtin.command: vcgencmd bootloader_config
+  register: bootloader_config
+  changed_when: false
+
+- name: Block to set options when nvme-hat is present
+  when: (root_device is search("nvme"))
+  block:
+    - name: If using a nvme-hat, add the pciex-stanza to the config file
+      ansible.builtin.lineinfile:
+        path: "{{ pi_config }}"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: "{{ item.state | default('present') }}"
+        insertafter: "{{ item.after | default('EOF') }}"
+      with_items:
+        - { regexp: "^#*?dtparam=pciex1$", line: "dtparam=pciex1", after: "^[all]" }
+        - { regexp: "^#*?dtparam=pciex1_gen=3$", line: "dtparam=pciex1_gen=3", after: "^[all]" }
+      when: (root_device is search("nvme"))
+      notify: Restart Raspberry
+    - name: Template out the boot.conf to include in the bootloader
+      ansible.builtin.template:
+        src: boot.conf.j2
+        dest: /tmp/boot.conf
+        mode: '0644'
+        owner: root
+        group: root
+      when: (bootloader_config.stdout is not search('BOOT_ORDER=0xf461')) or (bootloader_config.stdout is not search('PCIE_PROBE=1'))
+    - name: Use this boot.conf to edit the bootloader
+      ansible.builtin.command:
+        cmd: "rpi-eeprom-config --apply /tmp/boot.conf"
+      become: true
+      become_user: root
+      when: (bootloader_config.stdout is not search('BOOT_ORDER=0xf461')) or (bootloader_config.stdout is not search('PCIE_PROBE=1'))
+      changed_when: true
+      notify: Restart Raspberry
