@@ -23,7 +23,7 @@
 
 - name: Set fact for root mount
   ansible.builtin.set_fact:
-    root_device: "{{ ansible_mounts | json_query(dev_filter) }}"
+    root_device: "{{ ansible_facts['mounts'] | json_query(dev_filter) }}"
   vars:
     dev_filter: "[?mount=='/'].device "
 

@@ -2,7 +2,7 @@
 # tasks file for pi-common
 - name: Check is this a raspberry, if not, end role
   ansible.builtin.meta: end_role
-  when: ansible_local.cpu_info.systemtype != "Raspberry"
+  when: ansible_facts['ansible_local'].cpu_info.systemtype != "Raspberry"
 ## Start by expanding the filesystem (when possible)
 - name: Check whether FS is expandable
   ansible.builtin.command: raspi-config nonint get_can_expand
@@ -137,11 +137,11 @@
 
 # P8 Remote GPIO
 - name: Block for remote GPIO, for which support was removed as per Debian 13
-  when: "ansible_distribution_major_version | int <= 12"
+  when: "ansible_facts['distribution_major_version'] | int <= 12"
   block:
     - name: Distribution version
       ansible.builtin.debug:
-        msg: "{{ ansible_distribution_major_version }}"
+        msg: "{{ ansible_facts['distribution_major_version'] }}"
 
     - name: Get rGPIO status
       ansible.builtin.command: raspi-config nonint get_rgpio
@@ -170,7 +170,7 @@
 - name: Set has_bootloader depending on cpu-version
   ansible.builtin.set_fact:
     has_bootloader: true
-  when: "'Raspberry Pi 5' in ansible_local['cpu_info']['processor_name'] or 'Raspberry Pi 4' in ansible_local['cpu_info']['processor_name']"
+  when: "'Raspberry Pi 5' in ansible_facts['ansible_local']['cpu_info']['processor_name'] or 'Raspberry Pi 4' in ansible_facts['ansible_local']['cpu_info']['processor_name']"
 
 - name: Get bootloader status for Raspberry Pi 4 and 5
   ansible.builtin.command: rpi-eeprom-update
