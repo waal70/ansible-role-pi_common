@@ -170,7 +170,7 @@
 - name: Set has_bootloader depending on cpu-version
   ansible.builtin.set_fact:
     has_bootloader: true
-  when: "'Raspberry Pi 5' in ansible_facts['ansible_local']['cpu_info']['processor_name'] or 'Raspberry Pi 4' in ansible_facts['ansible_local']['cpu_info']['processor_name']"
+  when: "'Pi 5' in ansible_facts['ansible_local']['cpu_info']['processor_name'] or 'Pi 4' in ansible_facts['ansible_local']['cpu_info']['processor_name']"
 
 - name: Get bootloader status for Raspberry Pi 4 and 5
   ansible.builtin.command: rpi-eeprom-update
