@@ -4,6 +4,30 @@
   ansible.builtin.meta: end_role
   when: ansible_facts['ansible_local'].cpu_info.systemtype != "Raspberry"
 ## Start by expanding the filesystem (when possible)
+
+- name: Ensure the raspberrypi-archive-keyring is there for Raspberry Pi devices
+  ansible.builtin.apt:
+    name: raspberrypi-archive-keyring
+    state: present
+
+- name: Update the raspi sources for Raspberry Pi devices
+  ansible.builtin.deb822_repository:
+    name: raspi
+    types: deb
+    uris: http://archive.raspberrypi.org/debian/
+    suites: trixie
+    components:
+      - main
+    signed_by: /usr/share/keyrings/raspberrypi-archive-keyring.pgp
+  register: raspi_apt
+
+- name: Update the apt when we made a change to the repository # noqa: no-handler
+  ansible.builtin.apt:
+    update_cache: true
+    autoremove: true
+    autoclean: true
+  when: raspi_apt.changed
+
 - name: Check whether FS is expandable
   ansible.builtin.command: raspi-config nonint get_can_expand
   register: fs_filled
