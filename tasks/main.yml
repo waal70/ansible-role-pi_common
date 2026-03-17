@@ -183,9 +183,11 @@
       changed_when: true
 # END BLOCK P8
 
-- name: Ensure rpi-connect-lite is not installed
+- name: Ensure rpi-connect-lite, wpasupplicant is not installed
   ansible.builtin.apt:
-    name: rpi-connect-lite
+    name: 
+      - rpi-connect-lite
+      - wpasupplicant
     state: absent
     purge: true
     autoremove: true
